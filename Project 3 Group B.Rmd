@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(caret)
+library(dplyr)
 ```
 
 ## Testing
@@ -15,7 +16,7 @@ library(caret)
 
 ```{r cars}
 df <- read_csv("./OnlineNewsPopularity.csv")
-#Creating a new variable for to contain data channels and removing the old one.
+#Create a new variable for new data channel classification. Also want to remove the old data channel variables and other variables we don't need. Also want to rename the day variables to make it easier for analysis with rename variable.
 df <- df %>%
   mutate(data_channel = if_else(
     data_channel_is_bus == 1,
@@ -38,8 +39,15 @@ df <- df %>%
             data_channel_is_socmed, data_channel_is_tech, data_channel_is_world,
             data_channel_is_lifestyle)) %>%
   mutate(log_shares = log(shares)) %>%
-  select(-shares)
+  select(-shares) %>% rename(monday = weekday_is_monday , tuesday = weekday_is_tuesday, wednesday = weekday_is_wednesday, thursday = weekday_is_thursday, friday = weekday_is_friday, saturday = weekday_is_saturday, sunday = weekday_is_sunday)
   
+  
+df_lifestyle <- df %>% filter(data_channel == "Lifestyle") 
+
+lifestyle_index <- createDataPartition(df_lifestyle$log_shares, p = .7, list = FALSE)
+lifestyle_train <- df_lifestyle[lifestyle_index,]
+lifestyle_test <- df_lifestyle[-lifestyle_index,]
+
 ```
 
 ## Including Plots
