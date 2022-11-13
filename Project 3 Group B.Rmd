@@ -179,3 +179,52 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
+
+### Summarizations
+1.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+lifestyle_train %>%
+  group_by(is_weekend) %>%
+  summarise(avg=mean(log_shares), med=median(log_shares), var=var(log_shares))
+```
+2.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+subjectivityData <- lifestyle_train %>% group_by(global_subjectivity) %>% summarize(sharecount = mean(log_shares))
+ggplot(subjectivityData, aes(x = global_subjectivity, y = sharecount)) +
+geom_point() +
+ggtitle("Count of Rented Bikes for each hour")
+```
+
+3.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+sentimentpolarityData <- lifestyle_train %>% group_by(global_sentiment_polarity) %>% summarize(sharecount = mean(log_shares))
+ggplot(sentimentpolarityData, aes(x = global_sentiment_polarity, y = sharecount)) +
+geom_point() +
+ggtitle("Count of Rented Bikes for each hour")
+```
+
+4.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+positivewordsData <- lifestyle_train %>% group_by(global_rate_positive_words) %>% summarize(sharecount = mean(log_shares))
+ggplot(positivewordsData, aes(x = global_rate_positive_words, y = sharecount)) +
+geom_point() +
+geom_smooth(method = "lm") +
+ggtitle("Count of Rented Bikes for each hour")
+```
+5.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+negativewordsData <- lifestyle_train %>% group_by(global_rate_negative_words) %>% summarize(sharecount = mean(log_shares))
+ggplot(negativewordsData, aes(x = global_rate_negative_words, y = sharecount)) +
+geom_point() +
+geom_smooth(method = "lm") +
+ggtitle("Count of Rented Bikes for each hour")
+```
