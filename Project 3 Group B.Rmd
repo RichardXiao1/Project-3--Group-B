@@ -50,7 +50,7 @@ df <- df %>%
             data_channel_is_socmed, data_channel_is_tech, data_channel_is_world,
             data_channel_is_lifestyle)) %>%
   mutate(log_shares = log(shares)) %>%
-  select(-shares) %>% rename(monday = weekday_is_monday , tuesday = weekday_is_tuesday, wednesday = weekday_is_wednesday, thursday = weekday_is_thursday, friday = weekday_is_friday, saturday = weekday_is_saturday, sunday = weekday_is_sunday)
+  select(-shares) %>% rename(Monday = weekday_is_monday , Tuesday = weekday_is_tuesday, Wednesday = weekday_is_wednesday, Thursday = weekday_is_thursday, Friday = weekday_is_friday, Saturday = weekday_is_saturday, Sunday = weekday_is_sunday)
   
   
 df_lifestyle <- df %>% filter(data_channel == "Lifestyle") 
@@ -62,11 +62,11 @@ lifestyle_test <- df_lifestyle[-lifestyle_index,]
 #This new dataframe converts the days into categorical values for graphing.
 
 moddf_lifestyle1 <- lifestyle_train%>%
-  mutate(day = if_else(monday == 1,"Monday",if_else(tuesday == 1,"Tuesday",if_else(wednesday == 1,"Wednesday",if_else(
-thursday == 1,"Thursday",if_else(friday == 1,"Friday",if_else(saturday == 1,"Saturday", "Sunday")))))))
+  mutate(day = if_else(Monday == 1,"Monday",if_else(Tuesday == 1,"Tuesday",if_else(Wednesday == 1,"Wednesday",if_else(
+Thursday == 1,"Thursday",if_else(Friday == 1,"Friday",if_else(Saturday == 1,"Saturday", "Sunday")))))))
 
 #Eliminates any categorical variables for use of principal component analysis
-df_lifestylecontinuous <- lifestyle_train %>%select(-c(monday, tuesday, wednesday, thursday,friday, saturday, sunday, is_weekend, data_channel))
+df_lifestylecontinuous <- lifestyle_train %>%select(-c(Monday, Tuesday, Wednesday, Thursday,Friday, Saturday, Sunday, is_weekend, data_channel))
 
 
 #Boxplot for log shares subdivided by days.
@@ -147,7 +147,7 @@ postResample(pred_forest, lifestyle_test$log_shares)
 ```{r}
 #Forward fitting model
 
-fit_forward <- train(log_shares ~., data = lifestyle_analysis, preProcess = c("center", "scale"), method = "leapForward")
+fit_forward <- train(log_shares ~., data = lifestyle_analysis,  method = "leapForward", preProcess = c("center", "scale"),trControl = trainControl(method = "cv", number = 10))
 
 fit_forward_prediction <- predict(fit_forward, newdata = lifestyle_test)
 postResample(fit_forward_prediction, lifestyle_test$log_shares)
@@ -172,9 +172,9 @@ PCs_eighty <- preProcess(df_no_shares, method = c("center","scale", "pca"), thre
 df_PC <- predict(PCs_eighty, newdata = df_no_shares)
 #Monday is excluded to avoid multicollinearity
 df_PC <- df_PC %>%
-  bind_cols(log_shares = df_lifestylecontinuous$log_shares,tuesday = lifestyle_train$tuesday, 
-            wednesday = lifestyle_train$wednesday, thursday = lifestyle_train$thursday, friday = lifestyle_train$friday,
-            saturday = lifestyle_train$saturday, sunday = lifestyle_train$sunday)
+  bind_cols(log_shares = df_lifestylecontinuous$log_shares,Tuesday = lifestyle_train$Tuesday, 
+            Wednesday = lifestyle_train$Wednesday, Thursday = lifestyle_train$Thursday, Friday = lifestyle_train$Friday,
+            Saturday = lifestyle_train$Saturday, Sunday = lifestyle_train$Sunday)
 screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
