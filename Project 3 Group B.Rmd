@@ -126,7 +126,55 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_title, color = day)) +
 lifestyle_summarystats <-describe(df_lifestylecontinuous)
 arrange_lifestylesummarystats <- lifestyle_summarystats %>%arrange(desc(sd))
 ```
+### Summarizations
 
+1.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+lifestyle_train %>%
+  group_by(is_weekend) %>%
+  summarise(avg=mean(log_shares), med=median(log_shares), var=var(log_shares))
+```
+2.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+subjectivityData <- lifestyle_train %>% group_by(global_subjectivity) %>% summarize(sharecount = mean(log_shares))
+ggplot(subjectivityData, aes(x = global_subjectivity, y = sharecount, color =global_subjectivity)) +
+geom_point() +
+ggtitle("dependence of numbers of shares on Text subjectivity ")
+```
+
+3.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+sentimentpolarityData <- lifestyle_train %>% group_by(global_sentiment_polarity) %>% summarize(sharecount = mean(log_shares))
+ggplot(sentimentpolarityData, aes(x = global_sentiment_polarity, y = sharecount, color =global_sentiment_polarity)) +
+geom_point() +
+ggtitle("dependence of numbers of shares on Text sentiment polarity ")
+```
+
+4.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+positivewordsData <- lifestyle_train %>% group_by(global_rate_positive_words) %>% summarize(sharecount = mean(log_shares))
+ggplot(positivewordsData, aes(x = global_rate_positive_words, y = sharecount), color=global_rate_positive_words) +
+geom_point() +
+geom_smooth(method = "lm") +
+ggtitle("dependence of numbers of shares on Rate of positive words in the content ")
+```
+5.
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+negativewordsData <- lifestyle_train %>% group_by(global_rate_negative_words) %>% summarize(sharecount = mean(log_shares))
+ggplot(negativewordsData, aes(x = global_rate_negative_words, y = sharecount)) +
+geom_point() +
+geom_smooth(method = "lm") +
+ggtitle("dependence of numbers of shares on Rate of Rate of negative words in the content ")
+```
 
 
 ```{r}
@@ -179,3 +227,61 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
+### Modeling
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+#Select variables of interest for analysis.
+lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,monday,tuesday,wednesday,thursday,friday,saturday,sunday)
+lifestyle_analysis
+```
+
+1. LASSO Regression Model
+```{r echo=TRUE,eval=TRUE}
+library(caret)
+fitLASSO <- train(log_shares ~ ., data = lifestyle_analysis,
+method = "lasso",
+preProcess = c("center", "scale"),
+trControl = trainControl(method = "cv", number = 10)
+)
+predLASSO <- predict(fitLASSO, newdata = lifestyle_test)
+m1<-postResample(predLASSO, obs = lifestyle_test$log_shares)
+m1
+```
+2. Boosted Tree Model
+```{r echo=TRUE,eval=TRUE}
+library(caret)
+boostedFit <- train(log_shares ~ ., data = lifestyle_analysis, method = "gbm",trControl = trainControl(method = "cv" , number = 10),
+                    preProcess = c("center", "scale"),
+                    tuneGrid = expand.grid(n.trees = c(25, 50, 100, 150, 200),
+                                           interaction.depth = 1:4,
+                                           shrinkage = 0.1,
+                                           n.minobsinnode = 10)
+                    )
+pred_boosted <- predict(boostedFit, newdata = lifestyle_test)
+m2<-postResample(pred_boosted, lifestyle_test$log_shares)
+m2
+```
+3.
+
+4.
+```{r}
+#Random forest model
+#Select variables of interest for analysis.
+lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,monday,tuesday,wednesday,thursday,friday,saturday,sunday)
+fit_forest <- train(log_shares ~ ., data = lifestyle_analysis, method = "treebag",trControl = trainControl(method = "cv" , number = 10),preProcess = c("center", "scale"),mtry = c(1:21))
+pred_forest <- predict(fit_forest, newdata = lifestyle_test)
+m4<-postResample(pred_forest, lifestyle_test$log_shares)
+m4
+```
+### Comparison
+```{r}
+LASSO<- tibble(model = c("LASSO"), RMSE = c(m1[[1]]), Rsquared = c(m1[[2]]))
+
+boostedTree<- tibble(model = c("boosted"), RMSE = c(m2[[1]]), Rsquared = c(m2[[2]]))
+
+
+randomForest<- tibble(model = c("randomForest"), RMSE = c(m4[[1]]), Rsquared = c(m4[[2]]))
+
+comparison<- rbind(LASSO, boostedTree, randomForest)
+comparison
+```
