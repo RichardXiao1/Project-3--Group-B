@@ -273,6 +273,7 @@ pred_forest <- predict(fit_forest, newdata = lifestyle_test)
 m4<-postResample(pred_forest, lifestyle_test$log_shares)
 m4
 ```
+
 ### Comparison
 ```{r}
 LASSO<- tibble(model = c("LASSO"), RMSE = c(m1[[1]]), Rsquared = c(m1[[2]]))
@@ -285,3 +286,4 @@ randomForest<- tibble(model = c("randomForest"), RMSE = c(m4[[1]]), Rsquared = c
 comparison<- rbind(LASSO, boostedTree, randomForest)
 comparison
 ```
+
