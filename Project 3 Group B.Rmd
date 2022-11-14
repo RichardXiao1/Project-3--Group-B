@@ -120,11 +120,15 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_title, color = day)) +
 ```
 
 
-
+## Summary Statistics
+According to the output of our table, the kw_max_max variable has the highest standard deviation,median and mean compared to our other variables. Also, according to our contingency table with comparison of days and data channel, most amount of lifestyle articles were published in Wednesday while the least amount of articles were published on Saturday.
 ```{r pressure, echo=FALSE}
 #summary statistics for this continuous dataframe. Describe function is used to get statistics like sd, mean and other stats.
 lifestyle_summarystats <-describe(df_lifestylecontinuous)
 arrange_lifestylesummarystats <- lifestyle_summarystats %>%arrange(desc(sd))
+lifestyle_summarystats
+arrange_lifestylesummarystats
+table(moddf_lifestyle1$day,moddf_lifestyle1$data_channel)
 ```
 ### Summarizations
 
@@ -181,7 +185,7 @@ ggtitle("dependence of numbers of shares on Rate of Rate of negative words in th
 #Random forest model
 
 #Select variables of interest for analysis.
-lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,monday,tuesday,wednesday,thursday,friday,saturday,sunday)
+lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday)
 
 fit_forest <- train(log_shares ~ ., data = lifestyle_analysis, method = "treebag",trControl = trainControl(method = "cv" , number = 10),preProcess = c("center", "scale"),mtry = c(1:21))
 
@@ -192,20 +196,21 @@ postResample(pred_forest, lifestyle_test$log_shares)
 ```
 
 
+
+## Screeplot and Biplot
+
+For the first chunk, the biplots show that the 1st PC doesn't have a relationship with number of videos. The second PC does not have a relationship with unique tokens and token content.According to the screeplot, two PCs would be sufficient.
+
+For the second chunk, the biplots shows PC 1 having a relationship with every variable except for kw_avg_min. PC1 doesn't really have a strong relationship with the number of tokens title. For PC2, it doesn't have a strong relationship with number of tokens title. According to the screeplot, 2 or 3 pcs would be sufficient.
+
+The biplot for the last chunk shows PC 1 with a relationship on every variable except for kw_avg_min. PC1 doesn't really have a strong relationship with the number of tokens title. For PC2, it doesn't have a strong relationship with number of tokens title. According to the screeplot, 2 or 3 pcs would be sufficient.
 ```{r}
-#Forward fitting model
+#For this portion, I split the principal component aspect into 3 chunks since including all of the variables in one graph would make it unreadable. 
 
-fit_forward <- train(log_shares ~., data = lifestyle_analysis,  method = "leapForward", preProcess = c("center", "scale"),trControl = trainControl(method = "cv", number = 10))
+#First chunk of code for screeplot and biplot. 
 
-fit_forward_prediction <- predict(fit_forward, newdata = lifestyle_test)
-postResample(fit_forward_prediction, lifestyle_test$log_shares)
-
-
-```
-
-```{r}
 df_no_shares <- df_lifestylecontinuous %>%
-  select(-log_shares)
+  select(num_imgs,num_videos,n_tokens_content,n_unique_tokens)
 #Creating PC's along with center and scaling variables
 PCs <- prcomp(df_no_shares, center = TRUE, scale = TRUE)
 #Creating screeplots
@@ -225,13 +230,65 @@ df_PC <- df_PC %>%
             Saturday = lifestyle_train$Saturday, Sunday = lifestyle_train$Sunday)
 screeplot(PCs, type = "lines")
 biplot(PCs)
+
+
+#Second chunk of code for screeplot and biplot
+
+df_no_shares <- df_lifestylecontinuous %>%
+  select(n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg)
+#Creating PC's along with center and scaling variables
+PCs <- prcomp(df_no_shares, center = TRUE, scale = TRUE)
+#Creating screeplots
+par(mfrow = c(1,2))
+plot(PCs$sdev^2/sum(PCs$sdev^2), xlab = "Principal Component",
+ylab = "Proportion of Variance Explained", ylim = c(0, 1), type = 'b')
+plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
+ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
+#Selecting only the PC's up to a 80% variance explained threshold using caret
+PCs_eighty <- preProcess(df_no_shares, method = c("center","scale", "pca"), thresh = .8)
+#Creating a data frame with just my PC's, day variables, and log_shares to use later as a regression
+df_PC <- predict(PCs_eighty, newdata = df_no_shares)
+#Monday is excluded to avoid multicollinearity
+df_PC <- df_PC %>%
+  bind_cols(log_shares = df_lifestylecontinuous$log_shares,Tuesday = lifestyle_train$Tuesday, 
+            Wednesday = lifestyle_train$Wednesday, Thursday = lifestyle_train$Thursday, Friday = lifestyle_train$Friday,
+            Saturday = lifestyle_train$Saturday, Sunday = lifestyle_train$Sunday)
+screeplot(PCs, type = "lines")
+biplot(PCs)
+
+
+#Third Chunk
+
+
+df_no_shares <- df_lifestylecontinuous %>%
+  select(global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words)
+#Creating PC's along with center and scaling variables
+PCs <- prcomp(df_no_shares, center = TRUE, scale = TRUE)
+#Creating screeplots
+par(mfrow = c(1,2))
+plot(PCs$sdev^2/sum(PCs$sdev^2), xlab = "Principal Component",
+ylab = "Proportion of Variance Explained", ylim = c(0, 1), type = 'b')
+plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
+ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
+#Selecting only the PC's up to a 80% variance explained threshold using caret
+PCs_eighty <- preProcess(df_no_shares, method = c("center","scale", "pca"), thresh = .8)
+#Creating a data frame with just my PC's, day variables, and log_shares to use later as a regression
+df_PC <- predict(PCs_eighty, newdata = df_no_shares)
+#Monday is excluded to avoid multicollinearity
+df_PC <- df_PC %>%
+  bind_cols(log_shares = df_lifestylecontinuous$log_shares,Tuesday = lifestyle_train$Tuesday, 
+            Wednesday = lifestyle_train$Wednesday, Thursday = lifestyle_train$Thursday, Friday = lifestyle_train$Friday,
+            Saturday = lifestyle_train$Saturday, Sunday = lifestyle_train$Sunday)
+screeplot(PCs, type = "lines")
+biplot(PCs)
+
 ```
 
 ### Modeling
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 #Select variables of interest for analysis.
-lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,monday,tuesday,wednesday,thursday,friday,saturday,sunday)
+lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday)
 lifestyle_analysis
 ```
 
@@ -263,25 +320,41 @@ m2
 ```
 3.
 
+```{r}
+#Forward fitting model
+
+fit_forward <- train(log_shares ~., data = lifestyle_analysis,  method = "leapForward", preProcess = c("center", "scale"),trControl = trainControl(method = "cv", number = 10))
+
+fit_forward_prediction <- predict(fit_forward, newdata = lifestyle_test)
+m3 <- postResample(fit_forward_prediction, lifestyle_test$log_shares)
+
+
+```
+
+
 4.
 ```{r}
 #Random forest model
 #Select variables of interest for analysis.
-lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,monday,tuesday,wednesday,thursday,friday,saturday,sunday)
+lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday)
 fit_forest <- train(log_shares ~ ., data = lifestyle_analysis, method = "treebag",trControl = trainControl(method = "cv" , number = 10),preProcess = c("center", "scale"),mtry = c(1:21))
 pred_forest <- predict(fit_forest, newdata = lifestyle_test)
 m4<-postResample(pred_forest, lifestyle_test$log_shares)
 m4
 ```
-### Comparison
+### Model Comparison
+
+According to the comparison of these models, the random forest would be the best model since it has the lowest RMSE and highest R squared value, with the forward model being the worst performer.
 ```{r}
 LASSO<- tibble(model = c("LASSO"), RMSE = c(m1[[1]]), Rsquared = c(m1[[2]]))
 
 boostedTree<- tibble(model = c("boosted"), RMSE = c(m2[[1]]), Rsquared = c(m2[[2]]))
 
+forward<-  tibble(model = c("forward"), RMSE = c(m3[[1]]), Rsquared = c(m3[[2]]))
 
 randomForest<- tibble(model = c("randomForest"), RMSE = c(m4[[1]]), Rsquared = c(m4[[2]]))
 
-comparison<- rbind(LASSO, boostedTree, randomForest)
+comparison<- rbind(LASSO, boostedTree, forward, randomForest)
 comparison
 ```
+
