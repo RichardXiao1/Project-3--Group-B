@@ -1,23 +1,17 @@
 ---
 title: "Project 3"
-author: "Richard Xiao"
-date: "2022-11-11"
-output: html_document
+author: "Richard Xiao & Xi Yang"
+date: "2022-11-12"
+output: 
+  rmarkdown::github_document:
+    toc: yes
+params:
+      channel: "Lifestyle"
 ---
-
-```{r setup, include=FALSE}
-library(tidyverse)
-library(caret)
-library(dplyr)
-library(psych)
-library(corrplot)
-```
-
 ### Introduction section
-
 This is an online news popularity data set, and dataset summarizes a heterogeneous set of features about articles published by Mashable in a period of two years. The goal is to predict the number of shares in social networks (popularity). We're thinking about what kind of articles are we most likely to share, and we believe there are two aspects. One is objectivity. Users can feel the content is useful and valuable. The other one is subjectivity. Users agree with the attitudes expressed in the article, and also, the emotion expressed in the article resonated with users. 
 
-Based on the two aspects, we choose 26 variables, and they are n_tokens_title, n_tokens_content, n_unique_tokens, num_imgs, num_videos, kw_avg_min, kw_max_max, kw_avg_max, kw_avg_avg, weekday_is_monday, weekday_is_tuesday, weekday_is_wednesday, weekday_is_thursday, weekday_is_friday,. weekday_is_saturday, weekday_is_sunday, is_weekend, LDA_00: Closeness to LDA topic 0, global_subjectivity, global_sentiment_polarity, global_rate_positive_words, global_rate_negative_words, rate_positive_words, rate_negative_words, avg_positive_polarity, avg_negative_polarity.
+Based on the two aspects, we choose 21 variables, and they are n_tokens_title, n_tokens_content, n_unique_tokens, num_imgs, num_videos, kw_avg_min, kw_max_max, kw_avg_max, kw_avg_avg, weekday_is_monday, weekday_is_tuesday, weekday_is_wednesday, weekday_is_thursday, weekday_is_friday,. weekday_is_saturday, weekday_is_sunday, global_subjectivity, global_sentiment_polarity, global_rate_positive_words, global_rate_negative_words, and share.
 
 We produce some basic analysis before we fitting the model. The purpose is to inspect the trends between different variables with respect to the number of share, and also, figure out the correlation between a few notable numeric variables. It helps the reader understand the summary or graph.
 
@@ -26,10 +20,15 @@ For a linear regression model, we'll use Backward stepwise and LASSO regression 
 ## Testing
 
 
-```{r cars}
-df <- read_csv("./OnlineNewsPopularity.csv")
+```{r echo=TRUE,eval=TRUE}
+library(tidyverse)
+library(caret)
+#read in data
+setwd("/Users/cathy/Desktop/project 3--Group B")
+df1 <- read_csv("OnlineNewsPopularity.csv")
+df1
 #Create a new variable for new data channel classification. Also want to remove the old data channel variables and other variables we don't need. Also want to rename the day variables to make it easier for analysis with rename variable.
-df <- df %>%
+df <- df1 %>%
   mutate(data_channel = if_else(
     data_channel_is_bus == 1,
     "Business",
@@ -51,14 +50,17 @@ df <- df %>%
             data_channel_is_socmed, data_channel_is_tech, data_channel_is_world,
             data_channel_is_lifestyle)) %>%
   mutate(log_shares = log(shares)) %>%
-  select(-shares) %>% rename(Monday = weekday_is_monday , Tuesday = weekday_is_tuesday, Wednesday = weekday_is_wednesday, Thursday = weekday_is_thursday, Friday = weekday_is_friday, Saturday = weekday_is_saturday, Sunday = weekday_is_sunday)
-  
-  
-df_lifestyle <- df %>% filter(data_channel == "Lifestyle") 
-
+  select(-shares) %>% rename(monday = weekday_is_monday , tuesday = weekday_is_tuesday, wednesday = weekday_is_wednesday, thursday = weekday_is_thursday, friday =     weekday_is_friday, saturday = weekday_is_saturday, sunday = weekday_is_sunday)
+df 
+#a single data_channel_is_lifestyle
+df_lifestyle <- df %>% filter(data_channel == params$channel) 
+df_lifestyle
 lifestyle_index <- createDataPartition(df_lifestyle$log_shares, p = .7, list = FALSE)
 lifestyle_train <- df_lifestyle[lifestyle_index,]
 lifestyle_test <- df_lifestyle[-lifestyle_index,]
+lifestyle_train
+lifestyle_test
+```
 
 #This new dataframe converts the days into categorical values for graphing.
 
@@ -432,4 +434,26 @@ randomForest<- tibble(model = c("randomForest"), RMSE = c(m4[[1]]), Rsquared = c
 comparison<- rbind(LASSO, boostedTree, forward, randomForest)
 comparison
 ```
-
+### Automation
+#install.packages("purrr")
+```{r}
+library(purrr)
+library(tidyverse)
+#get unique teams
+channelIDs <- unique(df$data_channel)
+channelIDs
+#create filenames
+output_file <- paste0(channelIDs, ".md")
+#create a list for each team with just the team name parameter
+params<- lapply(channelIDs, FUN = function(x){list(channel = x)})
+params
+#put into a data frame
+reports <- tibble(channelIDs, output_file, params)
+reports
+library(rmarkdown)
+#need to use x[[1]] to get at elements since tibble doesn't simplify
+apply(reports, MARGIN = 1,
+FUN = function(x){
+render(input = "project 3.Rmd", output_file = x[[2]], params = x[[3]])
+})
+```
