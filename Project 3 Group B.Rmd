@@ -10,6 +10,7 @@ library(tidyverse)
 library(caret)
 library(dplyr)
 library(psych)
+library(corrplot)
 ```
 
 ### Introduction section
@@ -65,8 +66,7 @@ moddf_lifestyle1 <- lifestyle_train%>%
   mutate(day = if_else(Monday == 1,"Monday",if_else(Tuesday == 1,"Tuesday",if_else(Wednesday == 1,"Wednesday",if_else(
 Thursday == 1,"Thursday",if_else(Friday == 1,"Friday",if_else(Saturday == 1,"Saturday", "Sunday")))))))
 
-#Eliminates any categorical variables for use of principal component analysis
-df_lifestylecontinuous <- lifestyle_train %>%select(-c(Monday, Tuesday, Wednesday, Thursday,Friday, Saturday, Sunday, is_weekend, data_channel))
+
 
 
 #Boxplot for log shares subdivided by days.
@@ -120,10 +120,75 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_title, color = day)) +
 ```
 
 
+## Correlation Analysis
+
+According to the outputted correlation graphs, the log shares response doesn't seem to correlate with any of the prediction variables.
+```{r}
+#Subdivided into four chunks to analyze the log shares correlation with the lifestyle analysis predictor variables.
+
+#First Correlation plot
+
+first_corr_lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title)
+
+cor_mat <- cor(first_corr_lifestyle_analysis, method = "pearson")
+corrplot(cor_mat, hc.order = TRUE,
+type = "lower",
+tl.pos = "lt",
+title = "Correlation Coefficients for Channel Data",
+subtitle = "Correlation Coefficients for Channel Data",
+mar=c(0,0,2,0)
+)
+
+#Second Correlation plot
+
+second_corr_lifestyle_analysis <- lifestyle_train %>% select(log_shares,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg)
+
+cor_mat <- cor(second_corr_lifestyle_analysis, method = "pearson")
+corrplot(cor_mat, hc.order = TRUE,
+type = "lower",
+tl.pos = "lt",
+title = "Correlation Coefficients for Channel Data",
+subtitle = "Correlation Coefficients for Channel Data",
+mar=c(0,0,2,0))
+
+
+#Third Correlation Plot
+
+third_corr_lifestyle_analysis <- lifestyle_train %>% select(log_shares,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words)
+
+cor_mat <- cor(third_corr_lifestyle_analysis, method = "pearson")
+corrplot(cor_mat, hc.order = TRUE,
+type = "lower",
+tl.pos = "lt",
+title = "Correlation Coefficients for Channel Data",
+subtitle = "Correlation Coefficients for Channel Data",
+mar=c(0,0,2,0))
+
+
+#Fourth Correlation Plot
+
+fourth_corr_lifestyle_analysis <- lifestyle_train %>% select(log_shares,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday)
+
+cor_mat <- cor(fourth_corr_lifestyle_analysis, method = "pearson")
+corrplot(cor_mat, hc.order = TRUE,
+type = "lower",
+tl.pos = "lt",
+title = "Correlation Coefficients for Channel Data",
+subtitle = "Correlation Coefficients for Channel Data",
+mar=c(0,0,2,0))
+
+
+```
+
+
 ## Summary Statistics
 According to the output of our table, the kw_max_max variable has the highest standard deviation,median and mean compared to our other variables. Also, according to our contingency table with comparison of days and data channel, most amount of lifestyle articles were published in Wednesday while the least amount of articles were published on Saturday.
 ```{r pressure, echo=FALSE}
 #summary statistics for this continuous dataframe. Describe function is used to get statistics like sd, mean and other stats.
+
+#Eliminates any categorical variables for use of principal component analysis
+df_lifestylecontinuous <- lifestyle_train %>%select(-c(Monday, Tuesday, Wednesday, Thursday,Friday, Saturday, Sunday, is_weekend, data_channel))
+
 lifestyle_summarystats <-describe(df_lifestylecontinuous)
 arrange_lifestylesummarystats <- lifestyle_summarystats %>%arrange(desc(sd))
 lifestyle_summarystats
@@ -186,6 +251,16 @@ ggtitle("dependence of numbers of shares on Rate of Rate of negative words in th
 
 #Select variables of interest for analysis.
 lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday)
+
+cor_mat <- cor(lifestyle_analysis, method = "pearson")
+corrplot(cor_mat, hc.order = TRUE,
+type = "lower",
+tl.pos = "lt",
+title = "Correlation Coefficients for Channel Data",
+subtitle = "Correlation Coefficients for Channel Data",
+mar=c(0,0,2,0)
+)
+
 
 fit_forest <- train(log_shares ~ ., data = lifestyle_analysis, method = "treebag",trControl = trainControl(method = "cv" , number = 10),preProcess = c("center", "scale"),mtry = c(1:21))
 
