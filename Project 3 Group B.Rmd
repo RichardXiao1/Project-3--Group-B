@@ -8,7 +8,8 @@ output:
 params:
       channel: "Lifestyle"
 ---
-### Introduction section
+# Introduction section
+
 This is an online news popularity data set, and dataset summarizes a heterogeneous set of features about articles published by Mashable in a period of two years. The goal is to predict the number of shares in social networks (popularity). We're thinking about what kind of articles are we most likely to share, and we believe there are two aspects. One is objectivity. Users can feel the content is useful and valuable. The other one is subjectivity. Users agree with the attitudes expressed in the article, and also, the emotion expressed in the article resonated with users. 
 
 Based on the two aspects, we choose 21 variables, and they are n_tokens_title, n_tokens_content, n_unique_tokens, num_imgs, num_videos, kw_avg_min, kw_max_max, kw_avg_max, kw_avg_avg, weekday_is_monday, weekday_is_tuesday, weekday_is_wednesday, weekday_is_thursday, weekday_is_friday,. weekday_is_saturday, weekday_is_sunday, global_subjectivity, global_sentiment_polarity, global_rate_positive_words, global_rate_negative_words, and share.
@@ -17,10 +18,9 @@ We produce some basic analysis before we fitting the model. The purpose is to in
 
 For a linear regression model, we'll use Backward stepwise and LASSO regression model. For an ensemble tree-based model, we'll fit random forest and boosted tree model.
 
-## Testing
+# Data
 
-
-```{r echo=TRUE,eval=TRUE}
+```r
 library(tidyverse)
 library(caret)
 #read in data
@@ -62,16 +62,36 @@ lifestyle_train
 lifestyle_test
 ```
 
+Here, we plotted the correlation between a few notable numeric variables. 
+
+```r
+library(tidyverse)
+library(corrplot)
+cor_mat <- cor(lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words), method = "pearson")
+corrplot(cor_mat, hc.order = TRUE,
+type = "lower",
+tl.pos = "lt",
+title = "Correlation Coefficients for Bike Rental Data",
+subtitle = "Correlation Coefficients for Bike Rental Data",
+mar=c(0,0,2,0)
+)
+```
+From the correlation graph, we can see that the number of shares seems to be moderately correlated to n_tokens_content, kw_min_max, kw_avg_avg, 
+global_sentiment_polarity, and global_rate_positive_words. So these five variables are the most important ones from the lot, and we did further EDA, 
+to see trends between different variables with respect to the number of shares.
+
+# Summarizations
+
+```r
 #This new dataframe converts the days into categorical values for graphing.
-
 moddf_lifestyle1 <- lifestyle_train%>%
-  mutate(day = if_else(Monday == 1,"Monday",if_else(Tuesday == 1,"Tuesday",if_else(Wednesday == 1,"Wednesday",if_else(
-Thursday == 1,"Thursday",if_else(Friday == 1,"Friday",if_else(Saturday == 1,"Saturday", "Sunday")))))))
+  mutate(day = if_else(monday == 1,"Monday",if_else(tuesday == 1,"Tuesday",if_else(wednesday == 1,"Wednesday",if_else(
+thursday == 1,"Thursday",if_else(friday == 1,"Friday",if_else(saturday == 1,"Saturday", "Sunday")))))))
+#Eliminates any categorical variables for use of principal component analysis
+df_lifestylecontinuous <- lifestyle_train %>%select(-c(monday, tuesday, wednesday, thursday,friday, saturday, sunday, is_weekend, ))
+```
 
-
-
-
-#Boxplot for log shares subdivided by days.
+## 1. Boxplot for log shares subdivided by days.
 
 ggplot(moddf_lifestyle1, aes(x = day, y = log_shares, col = day)) + 
   geom_boxplot(fill="grey") + 
@@ -81,14 +101,14 @@ ggplot(moddf_lifestyle1, aes(x = day, y = log_shares, col = day)) +
   theme(axis.text.x = element_text(angle = 45)) +
   ggtitle("Boxplot for Log Shares by Day")
 
-#Scatterplot for log shares and number of images
+## 2. Scatterplot for log shares and number of images
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = num_imgs, color = day)) + 
   geom_point(stat = "identity", position = "jitter") + 
   geom_smooth( method = "lm")  + 
   xlab("num_hrefs") + 
   ylab("log_shares")
 
-#Scatterplot for log shares and number of videos.
+## 3. Scatterplot for log shares and number of videos.
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = num_videos, color = day)) + 
   geom_point(stat = "identity", position = "jitter") + 
   geom_smooth( method = "lm")  + 
@@ -96,24 +116,24 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = num_videos, color = day)) +
   ylab("log_shares")
 
 
-#Histogram for log shares 
+## 4. Histogram for log shares 
 ggplot(moddf_lifestyle1, aes(x=log_shares, fill = kw_avg_avg, color = day)) + geom_histogram(binwidth = 1, position="dodge") + xlab("Average KeyWord") + ylab("Log Shares")
 
-#Scatterplot for number of unique tokens and log shares
+## 5. Scatterplot for number of unique tokens and log shares
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_unique_tokens, color = day)) + 
   geom_point(stat = "identity", position = "jitter") + 
   geom_smooth( method = "lm")  + 
   xlab("n_unique_tokens") + 
   ylab("log_shares")
 
-#Scatterplot for number of tokens content and log shares
+## 6. Scatterplot for number of tokens content and log shares
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_content, color = day)) + 
   geom_point(stat = "identity", position = "jitter") + 
   geom_smooth( method = "lm")  + 
   xlab("n_tokens_content") + 
   ylab("log_shares")
 
-#Scatterplot for number of token titles and log shares
+## 7. Scatterplot for number of token titles and log shares
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_title, color = day)) + 
   geom_point(stat = "identity", position = "jitter") + 
   geom_smooth( method = "lm")  + 
@@ -122,7 +142,7 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_title, color = day)) +
 ```
 
 
-## Correlation Analysis
+## 8. Correlation Analysis
 
 According to the outputted correlation graphs, the log shares response doesn't seem to correlate with any of the prediction variables.
 ```{r}
@@ -178,12 +198,10 @@ tl.pos = "lt",
 title = "Correlation Coefficients for Channel Data",
 subtitle = "Correlation Coefficients for Channel Data",
 mar=c(0,0,2,0))
-
-
 ```
 
 
-## Summary Statistics
+## 9. Summary Statistics
 According to the output of our table, the kw_max_max variable has the highest standard deviation,median and mean compared to our other variables. Also, according to our contingency table with comparison of days and data channel, most amount of lifestyle articles were published in Wednesday while the least amount of articles were published on Saturday.
 ```{r pressure, echo=FALSE}
 #summary statistics for this continuous dataframe. Describe function is used to get statistics like sd, mean and other stats.
@@ -197,36 +215,48 @@ lifestyle_summarystats
 arrange_lifestylesummarystats
 table(moddf_lifestyle1$day,moddf_lifestyle1$data_channel)
 ```
-### Summarizations
 
-1.
+## 10. Numerical summary of categorical variable is_weekend
+
+let’s pull a summary of the number of shares. One of the factors that most affects the number of shares is whether the day is weekday or weekend. I wanted to look at the average, standard deviation, median and IQR values of number of shares on weekdays and weekend. If the value of average is larger , then articles tend to be shared more often.
+
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 lifestyle_train %>%
   group_by(is_weekend) %>%
-  summarise(avg=mean(log_shares), med=median(log_shares), var=var(log_shares))
+  summarise(average=mean(log_shares), median=median(log_shares), sd=sd(log_shares), IQR=IQR(log_shares))
 ```
-2.
+## 11. Dependence of number of shares on text subjectivity
+
+A scatter plot with the number of shares on the y-axis and the text subjectivity on the x-axis is created: we can inspect the trend of shares as a function of the text subjectivity. We know that if the value of text subjectivity is 0, it stands for the article is very objective, and value 1 stands for very subjective. If the most points distributed lower than 0.5, then articles with more objectivity tend to be shared more often. If the most points distributed larger than 0.5, then articles with more subjectivity tend to be shared more often. If the most points distributed around 0.5, then articles with more neutrality tend to be shared more often.
+
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 library(ggplot2)
 subjectivityData <- lifestyle_train %>% group_by(global_subjectivity) %>% summarize(sharecount = mean(log_shares))
 ggplot(subjectivityData, aes(x = global_subjectivity, y = sharecount, color =global_subjectivity)) +
 geom_point() +
-ggtitle("dependence of numbers of shares on Text subjectivity ")
+ggtitle("dependence of number of shares on text subjectivity ")
 ```
 
-3.
+## 12. Dependence of number of shares on text sentiment polarity
+
+A scatter plot with the number of shares on the y-axis and the text sentiment polarity on the x-axis is created: we can inspect the trend of shares as a function of the text sentiment polarity. We know that if the value of text sentiment polarity is greater than -1 and less than 0, it stands for the article sentiment is negative emotion. If the value of text sentiment polarity is greater than 0 and less than 1, it stands for the article sentiment is positive emotion. If the most points distributed around (-1,0), then articles with negative emotion tend to be shared more often. If the most points distributed around (0,1), then articles with positive emotion tend to be shared more often. If the most points distributed around 0, then articles with neutral emotion tend to be shared more often.
+
+
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 library(ggplot2)
 sentimentpolarityData <- lifestyle_train %>% group_by(global_sentiment_polarity) %>% summarize(sharecount = mean(log_shares))
 ggplot(sentimentpolarityData, aes(x = global_sentiment_polarity, y = sharecount, color =global_sentiment_polarity)) +
 geom_point() +
-ggtitle("dependence of numbers of shares on Text sentiment polarity ")
+ggtitle("dependence of number of shares on text sentiment polarity ")
 ```
 
-4.
+### 13. Dependence of number of shares on positive word rate
+
+A scatter plot with the number of shares on the y-axis and the positive word rate on the x-axis is created: we can inspect the trend of shares as a function of the positive word rate. If the points show an upward trend, then articles with more positive words tend to be shared more often. If we see a negative trend then articles with more positive words tend to be shared less often.
+
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 library(ggplot2)
@@ -234,9 +264,13 @@ positivewordsData <- lifestyle_train %>% group_by(global_rate_positive_words) %>
 ggplot(positivewordsData, aes(x = global_rate_positive_words, y = sharecount), color=global_rate_positive_words) +
 geom_point() +
 geom_smooth(method = "lm") +
-ggtitle("dependence of numbers of shares on Rate of positive words in the content ")
+ggtitle("dependence of number of shares on positive word rate ")
 ```
-5.
+
+### 14. Dependence of number of shares on negative words rate
+
+A scatter plot with the number of shares on the y-axis and the negative words rate on the x-axis is created: we can inspect the trend of shares as a function of the negative words rate. If the points show an upward trend, then articles with more negative words tend to be shared more often. If we see a negative trend then articles with more negative words tend to be shared less often.
+
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 library(ggplot2)
@@ -244,8 +278,9 @@ negativewordsData <- lifestyle_train %>% group_by(global_rate_negative_words) %>
 ggplot(negativewordsData, aes(x = global_rate_negative_words, y = sharecount)) +
 geom_point() +
 geom_smooth(method = "lm") +
-ggtitle("dependence of numbers of shares on Rate of Rate of negative words in the content ")
+ggtitle("dependence of number of shares on negative words rate")
 ```
+
 
 
 ```{r}
@@ -361,15 +396,22 @@ biplot(PCs)
 
 ```
 
-### Modeling
+# Modeling
+
+For models below, I have selected the log_shares as the dependent variable, and num_imgs, num_videos, n_tokens_content, n_unique_tokens, n_tokens_title, kw_avg_min, kw_max_max, kw_avg_max, kw_avg_avg,global_subjectivity, global_sentiment_polarity, global_rate_positive_words, global_rate_negative_words, monday, tuesday, wednesday, thursday, friday, saturday, sunday as the independent variables.
+
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 #Select variables of interest for analysis.
-lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday)
+lifestyle_analysis <- lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_tokens_content,n_unique_tokens,n_tokens_title,kw_avg_min,kw_max_max,kw_avg_max,kw_avg_avg,global_subjectivity,global_sentiment_polarity,global_rate_positive_words,global_rate_negative_words,monday,tuesday,wednesday,thursday,friday,saturday,sunday)
 lifestyle_analysis
 ```
+Here after all the models formulated below, to compare them, I am predicting the test data on this model to derive some common metrics like RMSE and R squared values that can be used to compare multiple models. For prediction, I am using predict() function, and to extract prediction metrics, I am using postResample() function.
 
-1. LASSO Regression Model
+### 1. LASSO Regression Model
+
+Lasso regression is a type of linear regression that uses shrinkage. Shrinkage is where data values are shrunk towards a central point, like the mean. The lasso procedure encourages simple, sparse models (i.e. models with fewer parameters). This particular type of regression is well-suited for models showing high levels of multicollinearity or when you want to automate certain parts of model selection, like variable selection/parameter elimination.
+
 ```{r echo=TRUE,eval=TRUE}
 library(caret)
 fitLASSO <- train(log_shares ~ ., data = lifestyle_analysis,
@@ -381,7 +423,10 @@ predLASSO <- predict(fitLASSO, newdata = lifestyle_test)
 m1<-postResample(predLASSO, obs = lifestyle_test$log_shares)
 m1
 ```
-2. Boosted Tree Model
+### 2. Boosted Tree Model
+
+Boosting is an ensemble learning method that combines a set of weak learners into a strong learner to minimize training errors. In boosting, a random sample of data is selected, fitted with a model and then trained sequentially—that is, each model tries to compensate for the weaknesses of its predecessor. With each iteration, the weak rules from each individual classifier are combined to form one, strong prediction rule. 
+
 ```{r echo=TRUE,eval=TRUE}
 library(caret)
 boostedFit <- train(log_shares ~ ., data = lifestyle_analysis, method = "gbm",trControl = trainControl(method = "cv" , number = 10),
@@ -419,7 +464,7 @@ pred_forest <- predict(fit_forest, newdata = lifestyle_test)
 m4<-postResample(pred_forest, lifestyle_test$log_shares)
 m4
 ```
-### Model Comparison
+# Model Comparison
 
 According to the comparison of these models, the random forest would be the best model since it has the lowest RMSE and highest R squared value, with the forward model being the worst performer.
 ```{r}
@@ -434,6 +479,8 @@ randomForest<- tibble(model = c("randomForest"), RMSE = c(m4[[1]]), Rsquared = c
 comparison<- rbind(LASSO, boostedTree, forward, randomForest)
 comparison
 ```
+From the above table we can say that, among the LASSO, boosted tree, forward and random forest models, the best model is LASSO model since it has the least RMSE and maximum Rsquared value as compared to the other three models.
+
 ### Automation
 #install.packages("purrr")
 ```{r}
