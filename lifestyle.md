@@ -61,12 +61,12 @@ df <- df1 %>%
   select(-shares) %>% rename(monday = weekday_is_monday , tuesday = weekday_is_tuesday, wednesday = weekday_is_wednesday, thursday = weekday_is_thursday, friday =     weekday_is_friday, saturday = weekday_is_saturday, sunday = weekday_is_sunday)
 df 
 #a single data_channel_is_lifestyle
-df_channel <- df %>% filter(get(selectchannel) ==1 ) 
-df_channel
+df<- df %>% filter(get(selectchannel) ==1 ) 
+df
 set.seed(100)
-index <- createDataPartition(df_lifestyle$log_shares, p = .7, list = FALSE)
-train <- df_lifestyle[lifestyle_index,]
-test <- df_lifestyle[-lifestyle_index,]
+index <- createDataPartition(df$log_shares, p = .7, list = FALSE)
+train <- df[index,]
+test <- df[-index,]
 train
 test
 ```
@@ -103,7 +103,7 @@ mar=c(0,0,2,0)
 
     ## Warning in title(title, ...): "subtitle" is not a graphical parameter
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-28-1.png)<!-- --> From the
+![](lifestyle_files/figure-gfm/unnamed-chunk-31-1.png)<!-- --> From the
 correlation graph, if the variable has a darker blue color, it will
 signify a strong positive correlation with the other variable whereas if
 it has a darker red color, it will have a stronger negative correlation
@@ -117,7 +117,7 @@ moddf <- train%>%
   mutate(day = if_else(monday == 1,"Monday",if_else(tuesday == 1,"Tuesday",if_else(wednesday == 1,"Wednesday",if_else(
 thursday == 1,"Thursday",if_else(friday == 1,"Friday",if_else(saturday == 1,"Saturday", "Sunday")))))))
 #Eliminates any categorical variables for use of principal component analysis
-continuous <- lifestyle_train %>%select(-c(monday, tuesday, wednesday, thursday,friday, saturday, sunday, is_weekend, ))
+continuous <- train %>%select(-c(monday, tuesday, wednesday, thursday,friday, saturday, sunday, is_weekend, ))
 ```
 
 ### 1.
@@ -133,7 +133,7 @@ ggplot(moddf, aes(x = day, y = log_shares, col = day)) +
   ggtitle("Boxplot for Log Shares by Day")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 ### 2.
 
@@ -148,7 +148,7 @@ ggplot(moddf, aes(y = log_shares, x = num_imgs, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ### 3.
 
@@ -163,7 +163,7 @@ ggplot(moddf, aes(y = log_shares, x = num_videos, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 ### 4.
 
@@ -172,7 +172,7 @@ ggplot(moddf, aes(y = log_shares, x = num_videos, color = day)) +
 ggplot(moddf, aes(x=log_shares, fill = kw_avg_avg, color = day)) + geom_histogram(binwidth = 1, position="dodge") + xlab("Average KeyWord") + ylab("Log Shares")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ### 5.
 
@@ -187,7 +187,7 @@ ggplot(moddf, aes(y = log_shares, x = n_unique_tokens, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ### 6.
 
@@ -202,7 +202,7 @@ ggplot(moddf, aes(y = log_shares, x = n_tokens_content, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 ### 7.
 
@@ -217,7 +217,7 @@ ggplot(moddf, aes(y = log_shares, x = n_tokens_title, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ### 8. General summary statistics for continuous dataframe
 
@@ -263,7 +263,7 @@ geom_point() +
 ggtitle("dependence of number of shares on text subjectivity ")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
 
 ### 11. Dependence of number of shares on text sentiment polarity
 
@@ -289,7 +289,7 @@ geom_point() +
 ggtitle("dependence of number of shares on text sentiment polarity ")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
 ### 12. Dependence of number of shares on positive word rate
 
@@ -312,7 +312,7 @@ ggtitle("dependence of number of shares on positive word rate ")
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-40-1.png)<!-- --> \### 13.
+![](lifestyle_files/figure-gfm/unnamed-chunk-43-1.png)<!-- --> \### 13.
 Dependence of number of shares on negative words rate
 
 A scatter plot with the number of shares on the y-axis and the negative
@@ -334,7 +334,7 @@ ggtitle("dependence of number of shares on negative words rate")
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
 
 ## Modeling
 
@@ -1410,7 +1410,7 @@ plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
 ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
 
 ``` r
 #Selecting only the PC's up to a 80% variance explained threshold using caret
@@ -1426,7 +1426,7 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-48-2.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-51-2.png)<!-- -->
 
 ``` r
 #Second chunk of code for screeplot and biplot
@@ -1443,7 +1443,7 @@ plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
 ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-48-3.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-51-3.png)<!-- -->
 
 ``` r
 #Selecting only the PC's up to a 80% variance explained threshold using caret
@@ -1459,7 +1459,7 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-48-4.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-51-4.png)<!-- -->
 
 ``` r
 #Third Chunk
@@ -1477,7 +1477,7 @@ plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
 ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-48-5.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-51-5.png)<!-- -->
 
 ``` r
 #Selecting only the PC's up to a 80% variance explained threshold using caret
@@ -1493,7 +1493,7 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-48-6.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-51-6.png)<!-- -->
 
 ## Automation
 
