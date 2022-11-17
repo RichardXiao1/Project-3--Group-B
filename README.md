@@ -18,7 +18,12 @@ Links:
 [business analysis](bus.html)
 
 [entertainment analysis](entertainment.html)
-[business analysis](bus.html)
+
+[socmed analysis](socmed.html)
+
+[tech analysis](tech.html)
+
+[world analysis](world.html)
 
 
 Code used to render these documents:
