@@ -14,10 +14,15 @@ library(rmarkdown)
 
 Links:
 [Lifestyle analysis](lifestyle.html)
+
 [Business analysis](bus.html)
+
 [Entertainment analysis](entertainment.html)
+
 [Tech analysis](tech.html)
+
 [World analysis](world.html)
+
 [Socmed analysis](socmed.html)
 
 Code used to render these documents:
