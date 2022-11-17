@@ -13,7 +13,7 @@ library(purr)
 library(rmarkdown)
 
 Links:
-[Lifestyle analysis](lifestyle.html)
+[lifestyle analysis](lifestyle.html)
 
 [Business analysis](bus.html)
 
