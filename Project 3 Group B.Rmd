@@ -15,8 +15,7 @@ Based on the two aspects, we choose 21 variables, and they are n_tokens_title, n
 
 We produce some basic analysis before we fitting the model. The purpose is to inspect the trends between different variables with respect to the number of share, and also, figure out the correlation between a few notable numeric variables. It helps the reader understand the summary or graph.
 
-For a linear regression model, we'll use Backward stepwise and LASSO regression model. For an ensemble tree-based model, we'll fit random forest and boosted tree model.
-
+For a linear regression model, we'll use Forward and LASSO regression model. For an ensemble tree-based model, we'll fit random forest and boosted tree model.
 
 ## Data
 
@@ -24,17 +23,17 @@ For a linear regression model, we'll use Backward stepwise and LASSO regression 
 library(tidyverse)
 library(caret)
 #read in data
-#setwd("/Users/cathy/Desktop/project 3--Group B")
+setwd("/Users/cathy/Desktop/project 3--Group B")
 df1 <- read_csv("OnlineNewsPopularity.csv")
 df1
-#Create a new variable for new data channel classification. Also want to remove the old data channel variables and other variables we don't need. Also want to rename the day variables to make it easier for analysis with rename variable.
-selectchannel<- paste0("data_channel_is_", params[[1]])
+#Remove the first two variables we don't need. Also want to rename the day variables to make it easier for analysis with rename variable.
 df <- df1 %>%
   select(-c(url, timedelta)) %>%
   mutate(log_shares = log(shares)) %>%
   select(-shares) %>% rename(monday = weekday_is_monday , tuesday = weekday_is_tuesday, wednesday = weekday_is_wednesday, thursday = weekday_is_thursday, friday =     weekday_is_friday, saturday = weekday_is_saturday, sunday = weekday_is_sunday)
 df 
 #a single data_channel_is_lifestyle
+selectchannel<- paste0("data_channel_is_", params[[1]])
 df_lifestyle <- df %>% filter(get(selectchannel) ==1 ) 
 df_lifestyle
 set.seed(100)
@@ -45,7 +44,10 @@ lifestyle_train
 lifestyle_test
 ```
 
-Here, we plotted the correlation between a few notable numeric variables. 
+## Summarizations
+
+### 1. Plotting the correlation between a few notable numeric variables. 
+
 ```{r echo=TRUE,eval=TRUE}
 library(tidyverse)
 library(corrplot)
@@ -53,16 +55,15 @@ cor_mat <- cor(lifestyle_train %>% select(log_shares,num_imgs,num_videos,n_token
 corrplot(cor_mat, hc.order = TRUE,
 type = "lower",
 tl.pos = "lt",
-title = "Correlation Coefficients for Bike Rental Data",
-subtitle = "Correlation Coefficients for Bike Rental Data",
+title = "Correlation Coefficients for number of shares",
+subtitle = "Correlation Coefficients for number of shares",
 mar=c(0,0,2,0)
 )
 ```
+
 From the correlation graph, we can see that the number of shares seems to be moderately correlated to n_tokens_content, kw_min_max, kw_avg_avg, 
 global_sentiment_polarity, and global_rate_positive_words. So these five variables are the most important ones from the lot, and we did further EDA, 
 to see trends between different variables with respect to the number of shares.
-
-## Summarizations
 
 ```{r echo=TRUE,eval=TRUE}
 #This new dataframe converts the days into categorical values for graphing.
@@ -73,7 +74,7 @@ thursday == 1,"Thursday",if_else(friday == 1,"Friday",if_else(saturday == 1,"Sat
 df_lifestylecontinuous <- lifestyle_train %>%select(-c(monday, tuesday, wednesday, thursday,friday, saturday, sunday, is_weekend, ))
 ```
 
-### 1.
+### 2.
 ```{r echo=TRUE,eval=TRUE}
 #Boxplot for log shares subdivided by days.
 ggplot(moddf_lifestyle1, aes(x = day, y = log_shares, col = day)) + 
@@ -85,7 +86,7 @@ ggplot(moddf_lifestyle1, aes(x = day, y = log_shares, col = day)) +
   ggtitle("Boxplot for Log Shares by Day")
 ```
 
-### 2.
+### 3.
 ```{r echo=TRUE,eval=TRUE}
 #Scatterplot for log shares and number of images
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = num_imgs, color = day)) + 
@@ -95,7 +96,7 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = num_imgs, color = day)) +
   ylab("log_shares")
 ```
 
-### 3.
+### 4.
 ```{r echo=TRUE,eval=TRUE}
 #Scatterplot for log shares and number of videos.
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = num_videos, color = day)) + 
@@ -105,13 +106,13 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = num_videos, color = day)) +
   ylab("log_shares")
 ```
 
-### 4.
+### 5.
 ```{r echo=TRUE,eval=TRUE}
 #Histogram for log shares 
 ggplot(moddf_lifestyle1, aes(x=log_shares, fill = kw_avg_avg, color = day)) + geom_histogram(binwidth = 1, position="dodge") + xlab("Average KeyWord") + ylab("Log Shares")
 ```
 
-### 5.
+### 6.
 ```{r echo=TRUE,eval=TRUE}
 #Scatterplot for number of unique tokens and log shares
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_unique_tokens, color = day)) + 
@@ -121,7 +122,7 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_unique_tokens, color = day)) 
   ylab("log_shares")
 ```
 
-### 6.
+### 7.
 ```{r echo=TRUE,eval=TRUE}
 #Scatterplot for number of tokens content and log shares
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_content, color = day)) + 
@@ -131,7 +132,7 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_content, color = day))
   ylab("log_shares")
 ```
 
-### 7.
+### 8.
 ```{r echo=TRUE,eval=TRUE}
 #Scatterplot for number of token titles and log shares
 ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_title, color = day)) + 
@@ -141,7 +142,7 @@ ggplot(moddf_lifestyle1, aes(y = log_shares, x = n_tokens_title, color = day)) +
   ylab("log_shares")
 ```
 
-### 8.
+### 9.
 ```{r pressure, echo=FALSE}
 library(psych)
 #summary statistics for this continuous dataframe. Describe function is used to get statistics like sd, mean and other stats.
@@ -150,7 +151,7 @@ arrange_lifestylesummarystats <- lifestyle_summarystats %>%arrange(desc(sd))
 arrange_lifestylesummarystats
 ```
 
-### 9. Numerical summary of categorical variable is_weekend
+### 10. Numerical summary of categorical variable is_weekend
 
 let’s pull a summary of the number of shares. One of the factors that most affects the number of shares is whether the day is weekday or weekend. I wanted to look at the average, standard deviation, median and IQR values of number of shares on weekdays and weekend. If the value of average is larger , then articles tend to be shared more often.
 
@@ -160,7 +161,7 @@ lifestyle_train %>%
   group_by(is_weekend) %>%
   summarise(average=mean(log_shares), median=median(log_shares), sd=sd(log_shares), IQR=IQR(log_shares))
 ```
-### 10. Dependence of number of shares on text subjectivity
+### 11. Dependence of number of shares on text subjectivity
 
 A scatter plot with the number of shares on the y-axis and the text subjectivity on the x-axis is created: we can inspect the trend of shares as a function of the text subjectivity. We know that if the value of text subjectivity is 0, it stands for the article is very objective, and value 1 stands for very subjective. If the most points distributed lower than 0.5, then articles with more objectivity tend to be shared more often. If the most points distributed larger than 0.5, then articles with more subjectivity tend to be shared more often. If the most points distributed around 0.5, then articles with more neutrality tend to be shared more often.
 
@@ -173,7 +174,7 @@ geom_point() +
 ggtitle("dependence of number of shares on text subjectivity ")
 ```
 
-### 11. Dependence of number of shares on text sentiment polarity
+### 12. Dependence of number of shares on text sentiment polarity
 
 A scatter plot with the number of shares on the y-axis and the text sentiment polarity on the x-axis is created: we can inspect the trend of shares as a function of the text sentiment polarity. We know that if the value of text sentiment polarity is greater than -1 and less than 0, it stands for the article sentiment is negative emotion. If the value of text sentiment polarity is greater than 0 and less than 1, it stands for the article sentiment is positive emotion. If the most points distributed around (-1,0), then articles with negative emotion tend to be shared more often. If the most points distributed around (0,1), then articles with positive emotion tend to be shared more often. If the most points distributed around 0, then articles with neutral emotion tend to be shared more often.
 
@@ -187,7 +188,7 @@ geom_point() +
 ggtitle("dependence of number of shares on text sentiment polarity ")
 ```
 
-### 12. Dependence of number of shares on positive word rate
+### 13. Dependence of number of shares on positive word rate
 
 A scatter plot with the number of shares on the y-axis and the positive word rate on the x-axis is created: we can inspect the trend of shares as a function of the positive word rate. If the points show an upward trend, then articles with more positive words tend to be shared more often. If we see a negative trend then articles with more positive words tend to be shared less often.
 
@@ -200,7 +201,7 @@ geom_point() +
 geom_smooth(method = "lm") +
 ggtitle("dependence of number of shares on positive word rate ")
 ```
-### 13. Dependence of number of shares on negative words rate
+### 14. Dependence of number of shares on negative words rate
 
 A scatter plot with the number of shares on the y-axis and the negative words rate on the x-axis is created: we can inspect the trend of shares as a function of the negative words rate. If the points show an upward trend, then articles with more negative words tend to be shared more often. If we see a negative trend then articles with more negative words tend to be shared less often.
 
@@ -298,7 +299,8 @@ From the above table we can say that, among the LASSO, boosted tree, forward and
 ```{r, eval=FALSE}
 library(purrr)
 library(tidyverse)
-#get unique teams
+library(rmarkdown)
+#create channel names
 channelIDs <- data.frame("lifestyle", "entertainment", "bus", "socmed", "tech", "world")
 channelIDs
 #create filenames
@@ -309,14 +311,10 @@ params
 #put into a data frame
 reports <- tibble(output_file, params)
 reports
-```
-
-```{r, eval=FALSE}
-library(rmarkdown)
-#need to use x[[1]] to get at elements since tibble doesn't simplify
+#render code
 apply(reports, MARGIN = 1,
 FUN = function(x){
-render(input = "Project-3--Group-B -.Rmd", output_file = x[[1]], params = x[[2]])
+render(input = "project 3.Rmd", output_file = x[[1]], params = x[[2]])
 })
 ```
 
