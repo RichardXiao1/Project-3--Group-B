@@ -8,3 +8,5 @@ library(psych)
 library(ggplot2)
 library(purr)
 library(rmarkdown)
+
+[Lifestyle articles is available here](lifestyle.html)
