@@ -29,7 +29,7 @@ number of share, and also, figure out the correlation between a few
 notable numeric variables. It helps the reader understand the summary or
 graph.
 
-For a linear regression model, we’ll use Backward stepwise and LASSO
+For a linear regression model, we’ll use forward stepwise and LASSO
 regression model. For an ensemble tree-based model, we’ll fit random
 forest and boosted tree model.
 
@@ -53,14 +53,16 @@ df1 <- read_csv("OnlineNewsPopularity.csv")
 
 ``` r
 df1
-#Create a new variable for new data channel classification. Also want to remove the old data channel variables and other variables we don't need. Also want to rename the day variables to make it easier for analysis with rename variable.
-selectchannel<- paste0("data_channel_is_", params[[1]])
+#Remove the first two variables we don't need. Also want to rename the day variables to make it easier for analysis with rename variable.
+
+
 df <- df1 %>%
   select(-c(url, timedelta)) %>%
   mutate(log_shares = log(shares)) %>%
   select(-shares) %>% rename(monday = weekday_is_monday , tuesday = weekday_is_tuesday, wednesday = weekday_is_wednesday, thursday = weekday_is_thursday, friday =     weekday_is_friday, saturday = weekday_is_saturday, sunday = weekday_is_sunday)
 df 
-#a single data_channel_is_lifestyle
+#setting up data channel 
+selectchannel<- paste0("data_channel_is_", params[[1]])
 df<- df %>% filter(get(selectchannel) ==1 ) 
 df
 set.seed(100)
@@ -71,8 +73,9 @@ train
 test
 ```
 
-Here, we plotted the correlation between a few notable numeric
-variables.
+## Summarizations
+
+### 1. Plotting the correlation between a few notable numeric variables.
 
 ``` r
 library(tidyverse)
@@ -103,13 +106,12 @@ mar=c(0,0,2,0)
 
     ## Warning in title(title, ...): "subtitle" is not a graphical parameter
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-31-1.png)<!-- --> From the
-correlation graph, if the variable has a darker blue color, it will
-signify a strong positive correlation with the other variable whereas if
-it has a darker red color, it will have a stronger negative correlation
-with the other variable.
+![](lifestyle_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-## Summarizations
+From the correlation graph, if the variable has a darker blue color, it
+will signify a strong positive correlation with the other variable
+whereas if it has a darker red color, it will have a stronger negative
+correlation with the other variable.
 
 ``` r
 #This new dataframe converts the days into categorical values for graphing.
@@ -120,7 +122,7 @@ thursday == 1,"Thursday",if_else(friday == 1,"Friday",if_else(saturday == 1,"Sat
 continuous <- train %>%select(-c(monday, tuesday, wednesday, thursday,friday, saturday, sunday, is_weekend, ))
 ```
 
-### 1.
+### 2. Boxplot for log shares subdivided by days.
 
 ``` r
 #Boxplot for log shares subdivided by days.
@@ -133,9 +135,9 @@ ggplot(moddf, aes(x = day, y = log_shares, col = day)) +
   ggtitle("Boxplot for Log Shares by Day")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-### 2.
+### 3. Scatterplot for log shares and number of images
 
 ``` r
 #Scatterplot for log shares and number of images
@@ -148,9 +150,9 @@ ggplot(moddf, aes(y = log_shares, x = num_imgs, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-### 3.
+### 4. Scatterplot for log shares and number of videos.
 
 ``` r
 #Scatterplot for log shares and number of videos.
@@ -163,18 +165,18 @@ ggplot(moddf, aes(y = log_shares, x = num_videos, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
-### 4.
+### 5. Histogram for log shares
 
 ``` r
 #Histogram for log shares 
 ggplot(moddf, aes(x=log_shares, fill = kw_avg_avg, color = day)) + geom_histogram(binwidth = 1, position="dodge") + xlab("Average KeyWord") + ylab("Log Shares")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
-### 5.
+### 6. Scatterplot for number of unique tokens and log shares
 
 ``` r
 #Scatterplot for number of unique tokens and log shares
@@ -187,9 +189,9 @@ ggplot(moddf, aes(y = log_shares, x = n_unique_tokens, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-### 6.
+### 7. Scatterplot for number of tokens content and log shares
 
 ``` r
 #Scatterplot for number of tokens content and log shares
@@ -202,9 +204,9 @@ ggplot(moddf, aes(y = log_shares, x = n_tokens_content, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-### 7.
+### 8. Scatterplot for number of token titles and log shares
 
 ``` r
 #Scatterplot for number of token titles and log shares
@@ -217,16 +219,16 @@ ggplot(moddf, aes(y = log_shares, x = n_tokens_title, color = day)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
-### 8. General summary statistics for continuous dataframe
+### 9. General summary statistics for continuous dataframe
 
 The code chunk below will give summary statistics for the twelve
 variables that we want to analyze. The results are ordered by descending
 standard deviation. We want to know the general statistics for all of
 these variables to see how they compare against each other.
 
-### 9. Numerical summary of categorical variable is_weekend
+### 10. Numerical summary of categorical variable is_weekend
 
 let’s pull a summary of the number of shares. One of the factors that
 most affects the number of shares is whether the day is weekday or
@@ -241,7 +243,7 @@ train %>%
   summarise(average=mean(log_shares), median=median(log_shares), sd=sd(log_shares), IQR=IQR(log_shares))
 ```
 
-### 10. Dependence of number of shares on text subjectivity
+### 11. Dependence of number of shares on text subjectivity
 
 A scatter plot with the number of shares on the y-axis and the text
 subjectivity on the x-axis is created: we can inspect the trend of
@@ -263,9 +265,9 @@ geom_point() +
 ggtitle("dependence of number of shares on text subjectivity ")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
-### 11. Dependence of number of shares on text sentiment polarity
+### 12. Dependence of number of shares on text sentiment polarity
 
 A scatter plot with the number of shares on the y-axis and the text
 sentiment polarity on the x-axis is created: we can inspect the trend of
@@ -289,9 +291,9 @@ geom_point() +
 ggtitle("dependence of number of shares on text sentiment polarity ")
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
-### 12. Dependence of number of shares on positive word rate
+### 13. Dependence of number of shares on positive word rate
 
 A scatter plot with the number of shares on the y-axis and the positive
 word rate on the x-axis is created: we can inspect the trend of shares
@@ -312,7 +314,7 @@ ggtitle("dependence of number of shares on positive word rate ")
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-43-1.png)<!-- --> \### 13.
+![](lifestyle_files/figure-gfm/unnamed-chunk-15-1.png)<!-- --> \### 14.
 Dependence of number of shares on negative words rate
 
 A scatter plot with the number of shares on the y-axis and the negative
@@ -334,7 +336,7 @@ ggtitle("dependence of number of shares on negative words rate")
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ## Modeling
 
@@ -1410,7 +1412,7 @@ plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
 ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
 #Selecting only the PC's up to a 80% variance explained threshold using caret
@@ -1426,7 +1428,7 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-51-2.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-23-2.png)<!-- -->
 
 ``` r
 #Second chunk of code for screeplot and biplot
@@ -1443,7 +1445,7 @@ plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
 ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-51-3.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-23-3.png)<!-- -->
 
 ``` r
 #Selecting only the PC's up to a 80% variance explained threshold using caret
@@ -1459,7 +1461,7 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-51-4.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-23-4.png)<!-- -->
 
 ``` r
 #Third Chunk
@@ -1477,7 +1479,7 @@ plot(cumsum(PCs$sdev^2/sum(PCs$sdev^2)), xlab = "Principal Component",
 ylab = "Cum. Prop of Variance Explained", ylim = c(0, 1), type = 'b')
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-51-5.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-23-5.png)<!-- -->
 
 ``` r
 #Selecting only the PC's up to a 80% variance explained threshold using caret
@@ -1493,7 +1495,7 @@ screeplot(PCs, type = "lines")
 biplot(PCs)
 ```
 
-![](lifestyle_files/figure-gfm/unnamed-chunk-51-6.png)<!-- -->
+![](lifestyle_files/figure-gfm/unnamed-chunk-23-6.png)<!-- -->
 
 ## Automation
 
@@ -1502,7 +1504,7 @@ biplot(PCs)
 ``` r
 library(purrr)
 library(tidyverse)
-#get unique teams
+#get data channels
 channelIDs <- data.frame("lifestyle", "entertainment", "bus", "socmed", "tech", "world")
 channelIDs
 #create filenames
@@ -1513,11 +1515,9 @@ params
 #put into a data frame
 reports <- tibble(output_file, params)
 reports
-```
 
-``` r
 library(rmarkdown)
-#need to use x[[1]] to get at elements since tibble doesn't simplify
+#render code
 apply(reports, MARGIN = 1,
 FUN = function(x){
 render(input = "Project 3 Final.Rmd", output_file = x[[1]], params = x[[2]])
