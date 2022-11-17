@@ -2,7 +2,7 @@
 
 The purpose of this repo is to give an analysis on six different data channels provided in an online popularity dataset. Links to each channel's analysis is provided.
 
-List of packages used:
+The list of packages used:
 library(tidyverse)
 library(caret)
 library(dplyr)
