@@ -13,17 +13,13 @@ library(purr)
 library(rmarkdown)
 
 Links:
-[Lifestyle analysis](lifestyle.html)
+[lifestyle analysis](lifestyle.html)
 
-[Business analysis](bus.html)
+[business analysis](bus.html)
 
-[Entertainment analysis](entertainment.html)
+[entertainment analysis](entertainment.html)
+[business analysis](bus.html)
 
-[Tech analysis](tech.html)
-
-[World analysis](world.html)
-
-[Socmed analysis](socmed.html)
 
 Code used to render these documents:
 
